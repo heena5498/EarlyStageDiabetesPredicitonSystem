@@ -140,49 +140,28 @@ python -c "import pandas, sklearn, flask; print('env OK')"
 **Examples**
 ```yaml
 datasets:
-  # Local Pima CSV (recommended to start)
+  # Local Pima CSV
   pima:
     path: "data/bronze/pima.csv"
     country: "USA"
     year: 1990
     adapter: "pima"
 
-  # Same dataset from a URL (alternative)
-  # pima_url:
-  #   path: "https://<your-source>/pima_diabetes.csv"
-  #   country: "USA"
-  #   year: 1990
-  #   adapter: "pima"
-
-  # WHO STEPS (Bangladesh 2018) – replace with your actual file/URL and adapter
-  # steps_bd_2018:
-  #   path: "data/bronze/steps_bd_2018.csv"
-  #   country: "Bangladesh"
-  #   year: 2018
-  #   adapter: "steps"
-
-  # NHANES 2017–2018 — often multiple files; point to a directory the adapter will read
-  # nhanes_2017_2018:
-  #   path: "data/bronze/nhanes_2017_2018/"
-  #   country: "USA"
-  #   year: 2018
-  #   adapter: "nhanes"
-```
 
 **Download helpers**
 
 macOS/Linux
 ```bash
 mkdir -p data/bronze
-curl -L -o data/bronze/pima.csv "<PUT_ACTUAL_URL_HERE>"
+curl -L -o data/bronze/pima.csv https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database
 # or
-wget -O data/bronze/pima.csv "<PUT_ACTUAL_URL_HERE>"
+wget -O data/bronze/pima.csv https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database
 ```
 
 Windows (PowerShell)
 ```powershell
 New-Item -ItemType Directory -Force data/bronze | Out-Null
-Invoke-WebRequest -Uri "<PUT_ACTUAL_URL_HERE>" -OutFile "data/bronze/pima.csv"
+Invoke-WebRequest -Uri https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database -OutFile "data/bronze/pima.csv"
 ```
 
 **Verify the path works**
@@ -193,7 +172,7 @@ print(pd.read_csv('data/bronze/pima.csv').shape)
 PY
 ```
 
-Then build your first silver file:
+Then build the first silver file:
 ```bash
 python src/ingest.py silver pima
 ```
@@ -279,31 +258,6 @@ python src/ingest.py silver <dataset>
 python src/ingest.py gold
 python src/train.py
 ```
-
-**Recommended next datasets:**
-- **USA (NHANES 2017–2020)** — FPG, HbA1c, insulin, BP, BMI, skinfold.
-- **WHO STEPS (e.g., Bangladesh/Egypt)** — FPG, BP, BMI.
-- **Mexico (ENSANUT)**, **China (CHNS)** — where access is available.
-
-> Keep `insulin_uIUml` and `skinfold_triceps_mm` **optional** so the model trains across countries. Consider training both a **core‑features model** and an **extended‑features model** for datasets that have insulin/skinfold.
-
----
-
-## 🔒 Privacy & ethics
-- Do **not** store personally identifiable information (PII) in the repo.
-- If deploying, serve over **HTTPS**, encrypt at rest, and minimize logs.
-- Include a clear **disclaimer** in the UI and documentation.
-
----
-
-## 🛣️ Roadmap
-- [ ] Add NHANES adapter, derive SBP/DBP correctly, join labs.
-- [ ] Add a WHO STEPS country (Bangladesh/Egypt) and unit tests for adapters.
-- [ ] Implement calibration plots + confidence intervals.
-- [ ] Containerize (Docker) and deploy to AWS App Runner/ECS.
-- [ ] Optional: Fitbit/Apple Health ingestion (CSV upload to start; OAuth later).
-- [ ] Add fairness checks (performance across age/sex groups when available).
-
 ---
 
 ## 🙌 Acknowledgments

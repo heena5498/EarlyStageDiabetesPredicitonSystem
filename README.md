@@ -313,10 +313,10 @@ python src/train.py
 ---
 
 ## 📜 License
-MIT (placeholder). Replace with your preferred license when publishing.
+MIT License
 
 ---
 
-**Questions or changes?** Open an issue and track adapter additions per country. This README reflects the **initial approach**—optimize as new datasets/constraints emerge.
+
 
 

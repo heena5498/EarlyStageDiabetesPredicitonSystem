@@ -1,0 +1,15 @@
+canonical_features:
+  age_years: {type: float}
+  sex: {type: category, allowed: [male, female, other, unknown]}
+  bmi_kgm2: {type: float}
+  sbp_mmHg: {type: float}
+  dbp_mmHg: {type: float}
+  fpg_mgdl: {type: float}           # fasting plasma glucose
+  hba1c_pct: {type: float}          # optional if available
+  insulin_uIUml: {type: float}      # optional
+  skinfold_triceps_mm: {type: float}# optional
+  family_history_dm: {type: int}    # 0/1 if available
+  outcome_dm: {type: int}           # 0/1 label (filled in labeling step)
+  country: {type: string}
+  year: {type: int}
+  source_id: {type: string}         # dataset identifier (e.g., PIMA_768)

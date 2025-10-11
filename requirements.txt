@@ -1,0 +1,9 @@
+pandas
+numpy
+pyyaml
+pandera
+typer
+pyarrow
+pytest
+flask
+scikit-learn

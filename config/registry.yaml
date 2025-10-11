@@ -1,0 +1,6 @@
+datasets:
+  pima:
+    adapter: pima
+    path: "data/bronze/pima.csv"
+    country: "USA"
+    year: 1990

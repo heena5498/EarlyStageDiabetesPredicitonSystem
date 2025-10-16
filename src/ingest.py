@@ -8,6 +8,7 @@ from src.utils import load_yaml, ensure_dir
 from src.validate import validate_silver
 from src.labeling import apply_labels
 from src.adapters.pima import PimaAdapter
+from adapters.indians import IndiansAdapter
 # from src.adapters.nhanes import NHANES_Adapter
 # from src.adapters.steps_bd import STEPS_BD_Adapter  # example
 
@@ -15,6 +16,7 @@ app = typer.Typer()
 
 ADAPTERS = {
     "pima": PimaAdapter,
+    "indians": IndiansAdapter,
     # "nhanes": NHANES_Adapter,
     # "steps": STEPS_BD_Adapter,
 }

@@ -22,13 +22,32 @@ class PimaAdapter(BaseAdapter):
             "age":  "Age",
             "class":"Outcome",
         }
-        df = df.rename(columns={k: v for k, v in colmap.items() if k in df.columns})
+        rename_dict = {}
+        for k, v in colmap.items():
+            if k in df.columns:
+                rename_dict[k] = v
+
+        df = df.rename(columns=rename_dict)
+
 
         # Ensure Outcome is 0/1 if it's strings like "tested_positive"
-        if "Outcome" in df and not pd.api.types.is_integer_dtype(df["Outcome"]):
-            df["Outcome"] = (
-                df["Outcome"].astype(str).str.contains("pos", case=False).astype(int)
-            )
+        # Step 1: Check if the column 'Outcome' exists
+        if "Outcome" in df:
+
+            # Step 2: Check if 'Outcome' is not already numeric (integer type)
+            if not pd.api.types.is_integer_dtype(df["Outcome"]):
+
+                # Step 3: Convert all values to string
+                outcome_str = df["Outcome"].astype(str)
+
+                # Step 4: Create a boolean Series — True if 'pos' appears in the string
+                outcome_bool = outcome_str.str.contains("pos", case=False)
+
+                # Step 5: Convert True/False to 1/0
+                outcome_int = outcome_bool.astype(int)
+
+                # Step 6: Replace the original column with the cleaned numeric version
+                df["Outcome"] = outcome_int
 
         # Zero-as-missing (only for columns that exist)
         zero_cols = [c for c in ["Glucose","BloodPressure","SkinThickness","Insulin","BMI"] if c in df.columns]

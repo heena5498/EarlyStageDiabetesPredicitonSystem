@@ -1,4 +1,5 @@
 # Harmonized Clinical Data Pipeline for Metabolic Risk Stratification
+[![System Validation](https://github.com/heena5498/clinical-data-harmonizer/actions/workflows/data_check.yml/badge.svg)](https://github.com/heena5498/clinical-data-harmonizer/actions/workflows/data_check.yml)
 
 A reproducible, automated framework for standardizing heterogeneous biomedical datasets.
 

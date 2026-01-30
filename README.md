@@ -23,11 +23,11 @@ This system uses an Object-Oriented Adapter Pattern to ingest data from differen
 
 ```mermaid
 graph LR
-    A[Raw Data Source] -->|Adapter (Pima)| B(Ingestion Engine)
-    C[Raw Data Source] -->|Adapter (Indian)| B
-    B -->|Validation (Pandera)| D[Silver Layer]
-    D -->|Aggregation| E[Gold Layer]
-    E -->|Inference| F[Risk Model]
+    A["Raw Data Source"] -->|"Adapter (Pima)"| B("Ingestion Engine")
+    C["Raw Data Source"] -->|"Adapter (Indian)"| B
+    B -->|"Validation (Pandera)"| D["Silver Layer"]
+    D -->|Aggregation| E["Gold Layer"]
+    E -->|Inference| F["Risk Model"]
 ```
 
 - **Bronze Layer**: Raw CSVs as received from the source (immutable).

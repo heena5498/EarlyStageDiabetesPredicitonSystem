@@ -4,3 +4,8 @@ datasets:
     path: "data/bronze/pima.csv"
     country: "USA"
     year: 1990
+  indians:
+    adapter: indians
+    path: "data/bronze/indians.csv"
+    country: "IN"
+    year: 2024   

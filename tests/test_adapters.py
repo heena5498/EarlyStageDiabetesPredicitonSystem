@@ -1,14 +1,20 @@
-from pathlib import Path
+import pytest
+import pandas as pd
 from src.adapters.pima import PimaAdapter
 
-
-def test_pima_adapter_loads_default():
-    # If data/gold/pima.csv doesn't exist this test will raise FileNotFoundError
-    # which is acceptable for the scaffold. Use CI to provide test data or mock.
-    adapter = PimaAdapter({})
-    try:
-        df = adapter.fetch()
-        assert df is not None
-    except FileNotFoundError:
-        # acceptable for initial skeleton
-        assert True
+def test_pima_adapter_structure():
+    """
+    Verify that PimaAdapter initializes correctly and follows the BaseAdapter contract.
+    """
+    adapter = PimaAdapter(
+        path="tests/dummy_pima.csv", 
+        country="USA", 
+        year=2024, 
+        source_id="test_pima"
+    )
+    
+    assert adapter.country == "USA"
+    assert adapter.source_id == "test_pima"
+    
+    assert hasattr(adapter, "load_raw")
+    assert hasattr(adapter, "to_silver")

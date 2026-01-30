@@ -1,8 +1,7 @@
-use_label_if_present: true   # if dataset already has a diagnosis flag, prefer it
+use_label_if_present: true 
 derive_rules:
   use_fpg: true
   fpg_diabetes_mgdl: 126
   use_hba1c: true
   hba1c_diabetes_pct: 6.5
-  # optional: prediabetes thresholds if you need multi-class later
 priority: ["existing_label", "fpg", "hba1c"]

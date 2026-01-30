@@ -5,10 +5,8 @@ def apply_labels(df: pd.DataFrame, criteria_path="config/criteria.yaml") -> pd.D
     cfg = load_yaml(criteria_path)
     df = df.copy()
     if cfg.get("use_label_if_present", True) and "outcome_dm" in df.columns and df["outcome_dm"].notna().any():
-        # if existing labels exist, keep them
         return df
 
-    # else, derive
     rules = cfg["derive_rules"]
     outcome = pd.Series(0, index=df.index, dtype=int)
 

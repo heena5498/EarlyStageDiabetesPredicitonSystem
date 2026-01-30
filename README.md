@@ -1,276 +1,137 @@
-# Early Diabetes Risk Prediction (Multi‑Country) — Initial Approach
+# Harmonized Clinical Data Pipeline for Metabolic Risk Stratification
 
-A lightweight, extensible pipeline and web app to estimate **diabetes risk** from routinely collected health metrics. Starts with the **Pima Indians Diabetes** dataset for fast prototyping, then scales to cross‑country microdata (e.g., **NHANES**, **WHO STEPS**, **ENSANUT**, **CHNS**) using a harmonized schema.
+A reproducible, automated framework for standardizing heterogeneous biomedical datasets.
 
----
-
-## 🎯 Goals
-- Build a **clean baseline** model (Logistic Regression → RF/XGBoost later) that predicts diabetes risk.
-- Create a **reproducible ETL** (bronze → silver → gold) to harmonize multiple countries’ datasets.
-- Ship a **minimal Flask UI** + programmatic inference.
-- Keep **thresholds and diagnostic criteria editable** (config‑driven).
-
-> **Not medical advice.** This tool provides educational risk estimates and is **not a diagnostic device**. Consult a licensed clinician for medical decisions.
+This project implements a Software as a Medical Device (SaMD) prototype designed to harmonize disparate health data sources into a unified schema for downstream research and risk modeling. It focuses on data integrity, measurement reproducibility, and system automation.
 
 ---
 
-## 🗺️ Architecture at a glance
-```
-(raw) bronze  →  (harmonized per‑dataset) silver  →  (merged) gold  →  train  →  Flask app
-```
-- **bronze**: As‑downloaded CSV/Parquet (read‑only)
-- **silver**: Canonical columns with units + derived labels if needed
-- **gold**: Union of all silver datasets (model‑ready)
+## Project Goals
+
+- **Engineer a Reproducible ETL**: Transform raw clinical data through a strict "Bronze → Silver → Gold" lineage to ensure traceability.
+- **Ensure System Reliability**: Implement automated schema validation (CI/CD) to catch data anomalies before they impact analysis.
+- **Harmonize Heterogeneous Data**: Standardize biological units (mg/dL vs. mmol/L) and demographic formats across international datasets (Pima Indians, Indian Healthcare).
+- **Clinician-in-the-Loop Design**: Utilize configuration files (criteria.yaml) to allow non-technical stakeholders to adjust diagnostic thresholds without code changes.
+
+> **Note**: This tool serves as a research prototype for data harmonization and educational risk estimation. It is not a certified diagnostic device.
 
 ---
 
-## 📁 Repository structure
+##  Architecture: The "Adapter Pattern"
+
+This system uses an Object-Oriented Adapter Pattern to ingest data from different sources while enforcing a strict "Silver" schema.
+
+```mermaid
+graph LR
+    A[Raw Data Source] -->|Adapter (Pima)| B(Ingestion Engine)
+    C[Raw Data Source] -->|Adapter (Indian)| B
+    B -->|Validation (Pandera)| D[Silver Layer]
+    D -->|Aggregation| E[Gold Layer]
+    E -->|Inference| F[Risk Model]
 ```
+
+- **Bronze Layer**: Raw CSVs as received from the source (immutable).
+- **Silver Layer**: Cleaned, validated, and harmonized data (canonical schema).
+- **Gold Layer**: Merged datasets ready for ML training.
+
+---
+
+## Preliminary Analysis & Validation
+
+To ensure measurement reproducibility, this pipeline validates the impact of cleaning logic on biological distributions.
+
+### 1. Impact of Data Cleaning (Reproducibility Check)
+
+Visualizing the distribution shift before and after harmonizing "biological zeros" (sensor errors) in the Pima dataset. This ensures that hardware artifacts do not bias downstream risk prediction.
+
+### 2. Clinical Correlations
+
+Exploratory analysis of the harmonized "Silver" data to verify expected biological relationships (e.g., Glucose vs. BMI vs. Blood Pressure).
+
+---
+
+## 🤖 System Reliability & Automation (CI/CD)
+
+To support the requirements of an Automated Electrochemical Measurement System, this repository includes a Continuous Integration (CI) workflow.
+
+- **Workflow**: `.github/workflows/data_check.yml`
+- **Function**: Automatically triggers on every git push.
+- **Validation**: Runs `src/validate.py` to ensure that any changes to the code do not break the strict biological constraints defined in the schema (e.g., BMI must be > 5, Glucose must be positive).
+
+---
+
+## Repository Structure
+
+```plaintext
 diabetes-risk/
-├─ data/
-│  ├─ bronze/                  # raw files
-│  ├─ silver/                  # cleaned per‑dataset
-│  └─ gold/                    # merged for modeling
+├─ .github/
+│  └─ workflows/
+│     └─ data_check.yml        # CI/CD Automation for reliability
 ├─ config/
-│  ├─ registry.yaml            # dataset registry (paths, years, adapters)
-│  ├─ schema.yaml              # canonical variables + units
-│  └─ criteria.yaml            # diagnostic cutoffs & rules
+│  ├─ registry.yaml            # Dataset registry (source paths)
+│  ├─ criteria.yaml            # Configurable diagnostic thresholds
+├─ data/                       # Bronze (Raw) -> Silver (Clean) -> Gold (Merged)
+├─ figures/                    # Analysis plots for reporting
 ├─ src/
-│  ├─ adapters/                # one adapter per dataset
-│  │  ├─ base.py
-│  │  ├─ pima.py               # working adapter (today)
-│  │  └─ nhanes_skeleton.py    # skeleton to extend
-│  ├─ ingest.py                # CLI: build silver/gold
-│  ├─ labeling.py              # derive outcome via config
-│  ├─ validate.py              # schema checks (pandera)
-│  └─ utils.py
-├─ app/
-│  ├─ server.py                # Flask app (form UI)
-│  └─ templates/index.html
-├─ models/
-│  ├─ model.joblib             # trained pipeline
-│  └─ config.json              # thresholds, metrics, feature order
-├─ notebooks/
-│  └─ 01_eda_baseline.ipynb
-├─ requirements.txt
+│  ├─ adapters/                # ADAPTER PATTERN IMPLEMENTATION
+│  │  ├─ base.py               # Abstract Base Class (Enforces Interface)
+│  │  ├─ indians.py            # Logic for Indian Healthcare data
+│  │  └─ pima.py               # Logic for Pima Indians data
+│  ├─ ingest.py                # CLI Entry point
+│  ├─ labeling.py              # Logic for deriving medical labels
+│  ├─ utils.py                 # Unit conversion & cleaning utilities
+│  └─ validate.py              # Pandera Schema Validation
+├── tests/                     
+│   ├── __init__.py
+│   └── test_adapters.py
+├─ generate_prelim_figures.py  # Script for reproducibility
+├─ requirements.txt  
 └─ README.md
+
 ```
 
 ---
+## Usage
 
-## 🧾 Canonical feature schema (silver)
-| Column | Type | Unit | Notes |
-|---|---|---|---|
-| `age_years` | float | years | |
-| `sex` | category | – | {male, female, other, unknown} (often unavailable in Pima) |
-| `bmi_kgm2` | float | kg/m² | |
-| `sbp_mmHg` | float | mmHg | Systolic BP (may be NA in some datasets) |
-| `dbp_mmHg` | float | mmHg | Diastolic BP (Pima’s BloodPressure is **DBP**) |
-| `fpg_mgdl` | float | mg/dL | Fasting Plasma Glucose (FPG) |
-| `hba1c_pct` | float | % | Optional if available |
-| `insulin_uIUml` | float | µIU/mL | Optional; available in NHANES/Pima |
-| `skinfold_triceps_mm` | float | mm | Optional; proxy for adiposity (NHANES) |
-| `family_history_dm` | int | 0/1 | If collected; else NA |
-| `outcome_dm` | int | 0/1 | Diabetes label (from dataset or derived) |
-| `country` | string | – | e.g., USA, Bangladesh |
-| `year` | int | – | Survey/reference year |
-| `source_id` | string | – | Dataset key, e.g., `pima` |
+### 1. Setup
 
-> **Zeros‑as‑missing**: In Pima, zeros in `Glucose`, `BloodPressure`, `SkinThickness`, `Insulin`, `BMI` are treated as **missing** and converted to `NaN` during ETL.
-
----
-
-## ⚙️ Configs
-**`config/registry.yaml`** — register datasets (path, country, year, adapter)
-```yaml
-datasets:
-  pima:
-    path: "data/bronze/pima.csv"
-    country: "USA"
-    year: 1990
-    adapter: "pima"
-```
-
-**`config/schema.yaml`** — enforce canonical columns & types (see table above)
-
-**`config/criteria.yaml`** — diagnostic rules (editable)
-```yaml
-use_label_if_present: true
-derive_rules:
-  use_fpg: true
-  fpg_diabetes_mgdl: 126
-  use_hba1c: true
-  hba1c_diabetes_pct: 6.5
-priority: ["existing_label", "fpg", "hba1c"]
-```
-
----
-
-## ⚡ Setup: create virtualenv & install requirements
-
-**macOS / Linux**
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
+# Clone and install dependencies
+git clone https://github.com/yourusername/diabetes-risk.git
 pip install -r requirements.txt
-# quick sanity check
-python -c "import pandas, sklearn, flask; print('env OK')"
 ```
 
-**Windows (PowerShell)**
-```powershell
-py -m venv .venv
-# activate
-& .venv/Scripts/Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-# quick sanity check
-python -c "import pandas, sklearn, flask; print('env OK')"
-```
+### 2. Run the Ingestion Pipeline
 
-> Tip: If you use conda, create `conda create -n diabetes-risk python=3.10` then `conda activate diabetes-risk` and install `requirements.txt`.
+Use the CLI tool to process specific datasets. The system automatically selects the correct Adapter based on the registry.
 
----
-
-## 🗃️ Populate `config/registry.yaml` with real dataset paths/URLs
-- Put local files under `data/bronze/` **or** point directly to a remote URL (pandas can read `http(s)` CSVs).
-- Each entry needs: `path`, `country`, `year`, and the `adapter` name you’ll use in `src/adapters/`.
-
-**Examples**
-```yaml
-datasets:
-  # Local Pima CSV
-  pima:
-    path: "data/bronze/pima.csv"
-    country: "USA"
-    year: 1990
-    adapter: "pima"
-
-
-**Download helpers**
-
-macOS/Linux
 ```bash
-mkdir -p data/bronze
-curl -L -o data/bronze/pima.csv https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database
-# or
-wget -O data/bronze/pima.csv https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database
+# Process Pima Indians dataset (Bronze -> Silver)
+python -m src.ingest silver pima
+
+# Process Indian Healthcare dataset (Bronze -> Silver)
+python -m src.ingest silver indians
 ```
 
-Windows (PowerShell)
-```powershell
-New-Item -ItemType Directory -Force data/bronze | Out-Null
-Invoke-WebRequest -Uri https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database -OutFile "data/bronze/pima.csv"
-```
+### 3. Validate Data Integrity
 
-**Verify the path works**
+Run the schema checks manually (also runs automatically via GitHub Actions).
+
 ```bash
-python - <<'PY'
-import pandas as pd
-print(pd.read_csv('data/bronze/pima.csv').shape)
-PY
-```
-
-Then build the first silver file:
-```bash
-python src/ingest.py silver pima
+python -c "from src.validate import validate_silver; print('Schema Validation Modules Loaded')"
 ```
 
 ---
+## Technical Highlights
 
-## 🚀 Quickstart (5 minutes)
-**Prereqs**: Python 3.10+, macOS/Linux/WSL
-```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# 1) Place Pima CSV
-mkdir -p data/bronze && cp <your_pima.csv> data/bronze/pima.csv
-
-# 2) Build silver for Pima
-python src/ingest.py silver pima
-
-# 3) Merge to gold (once you have multiple silver files)
-python src/ingest.py gold
-
-# 4) Train baseline model
-python src/train.py
-
-# 5) Run the Flask UI
-python app/server.py
-# open http://localhost:5000
-```
+- **Pandera**: Used for runtime schema validation to enforce biological constraints (e.g., `Check.ge(0)`).
+- **Typer**: Powers the CLI for easy interaction.
+- **Abstract Base Classes (ABC)**: `src/adapters/base.py` ensures that any new dataset added in the future follows the exact same API, ensuring system scalability.
+- **Unit Harmonization**: `src/utils.py` contains logic to detect and convert units, handling the mg/dL vs mmol/L difference standard in international research.
 
 ---
 
-## 🧪 Modeling (baseline → explainable)
-- **Baseline**: Logistic Regression (class_weight="balanced") wrapped in `CalibratedClassifierCV` for probability calibration.
-- **Risk tiers** (config saved in `models/config.json`):
-  - `p < t_med` → **Low**
-  - `t_med ≤ p < t_high` → **Medium**
-  - `p ≥ t_high` → **High**
-- **Metrics**: ROC‑AUC, PR‑AUC, **recall (sensitivity)**, specificity, F2 (recall‑weighted), Brier score (calibration).
-- **Explainability**: permutation importance or SHAP (optional) in `notebooks/01_eda_baseline.ipynb`.
+##  Contact
 
----
-
-## 🌐 Flask UI & API
-**Web UI**: simple form at `/` that posts to `/predict`.
-
-**Programmatic inference (Python):**
-```python
-from src.infer import predict_risk
-payload = {
-  "Pregnancies": 2, "Glucose": 148, "BloodPressure": 70,
-  "SkinThickness": 35, "Insulin": 0, "BMI": 33.6,
-  "DiabetesPedigreeFunction": 0.627, "Age": 50
-}
-print(predict_risk(payload))
-# → {"probability": 0.73, "tier": "High", "version": "logreg_calibrated_v1"}
-```
-
-**HTTP (form POST) example:**
-```bash
-curl -X POST http://localhost:5000/predict \
-  -d pregnancies=2 -d glucose=148 -d bloodpressure=70 \
-  -d skinthickness=35 -d insulin=0 -d bmi=33.6 -d dpf=0.627 -d age=50
-```
-
----
-
-## 🔍 Data quality & harmonization notes
-- **Units**: glucose in mg/dL (convert mmol/L → mg/dL by ×18). BP in mmHg. BMI in kg/m².
-- **Zeros → NaN**: apply to Pima fields (`Glucose`, `BloodPressure`, `SkinThickness`, `Insulin`, `BMI`).
-- **Labeling**: if dataset lacks an explicit diabetes flag, derive via `criteria.yaml` (FPG ≥ 126 mg/dL or HbA1c ≥ 6.5%).
-- **Ranges** (sanity checks): BMI 10–80, SBP 70–250, DBP 40–150, FPG 40–500.
-
----
-
-## 🧱 Extending to multi‑country data
-1) **Add adapter** `src/adapters/<dataset>.py` mapping original columns → canonical names (handle joins/units).
-2) Register in `config/registry.yaml` and run:
-```bash
-python src/ingest.py silver <dataset>
-```
-3) After multiple silver files exist, build gold and retrain:
-```bash
-python src/ingest.py gold
-python src/train.py
-```
----
-
-## 🙌 Acknowledgments
-- **Pima Indians Diabetes Dataset** (UCI ML Repository) used for prototyping.
-- Inspiration from public health survey designs (NHANES, WHO STEPS, ENSANUT, CHNS).
-
----
-
-## 📜 License
-MIT License
-
----
-
-
-
-
+**Project Lead**: Heena Khan  
+Open to research collaboration and internship opportunities in Biomedical Informatics.

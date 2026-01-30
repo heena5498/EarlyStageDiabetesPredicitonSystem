@@ -15,6 +15,7 @@ def mgdl_to_mmol_glucose(x):
 def clean_zero_as_nan(df, cols):
     df = df.copy()
     for c in cols:
-        df.loc[df[c].astype(float) == 0, c] = np.nan
+        mask = df[c].astype(float) == 0 
+        df.loc[mask, c] = np.nan 
     return df
 

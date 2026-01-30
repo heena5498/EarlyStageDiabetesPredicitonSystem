@@ -1,24 +1,16 @@
-"""Simple ingestion CLI to fetch datasets defined in config/registry.yaml
-
-Usage: python -m src.ingest
-"""
 import typer, pandas as pd
 from pathlib import Path
 from src.utils import load_yaml, ensure_dir
 from src.validate import validate_silver
 from src.labeling import apply_labels
 from src.adapters.pima import PimaAdapter
-from adapters.indians import IndiansAdapter
-# from src.adapters.nhanes import NHANES_Adapter
-# from src.adapters.steps_bd import STEPS_BD_Adapter  # example
+from src.adapters.indians import IndiansAdapter
 
 app = typer.Typer()
 
 ADAPTERS = {
     "pima": PimaAdapter,
     "indians": IndiansAdapter,
-    # "nhanes": NHANES_Adapter,
-    # "steps": STEPS_BD_Adapter,
 }
 
 def _instantiate(dkey, meta):
@@ -60,7 +52,6 @@ def gold():
         typer.echo("No silver files found.")
         raise typer.Exit(code=1)
     df = pd.concat(frames, ignore_index=True)
-    # (Optional) drop columns you won’t model on, e.g., sbp_mmHg when missing
     df.to_parquet("data/gold/diabetes_ml.parquet", index=False)
     typer.echo(f"Merged gold → data/gold/diabetes_ml.parquet | rows={len(df)}")
 

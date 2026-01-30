@@ -6,7 +6,8 @@ __pycache__/
 venv/
 .ipynb_checkpoints/
 *.log
-data/raw/
-data/temp/
 *.DS_Store
-
+data/*
+!data/bronze/
+!data/bronze/*.csv
+!figures/

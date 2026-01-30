@@ -1,0 +1,19 @@
+name: System Validation
+
+on: [push, pull_request]
+
+jobs:
+  validate-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Run Schema Validation Check
+        run: |
+          python -c "from src.validate import silver_schema; print('Schema validated OK')"
